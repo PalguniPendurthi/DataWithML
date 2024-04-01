@@ -1,61 +1,36 @@
-import csv
+import pandas as pd
 
-class InputDatasetFormatter:
-    def __init__(self):
-        self.standardized_tuples = []
+def format_input_dataset(file_path, file_format='csv', **kwargs):
+    """
+    Reads the input dataset and formats it into a standard set of tuples.
 
-    def read_csv_dataset(self, dataset_path):
-        """
-        Read the input dataset from a CSV file.
+    Args:
+    - file_path (str): Path to the input dataset file.
+    - file_format (str): Format of the input dataset file (csv, excel, json).
+    - **kwargs: Additional keyword arguments to pass to the file reader.
 
-        Args:
-        - dataset_path: Path to the input dataset CSV file.
-
-        Returns:
-        - List of dictionaries representing rows in the dataset.
-        """
-        try:
-            with open(dataset_path, 'r', newline='') as file:
-                reader = csv.DictReader(file)
-                dataset = [row for row in reader]
-            return dataset
-        except FileNotFoundError:
-            print("Error: Dataset file not found.")
-            return []
-
-    def extract_tuples(self, dataset):
-        """
-        Parse the dataset to extract attribute values and tuples.
-
-        Args:
-        - dataset: List of dictionaries representing rows in the dataset.
-
-        Returns:
-        - List of tuples extracted from the dataset.
-        """
-        tuples = []
-        for row in dataset:
-            # Assuming each row in the dataset represents a tuple
-            tuples.append(tuple(row.values()))
-        return tuples
-
-    def format_dataset(self, dataset_path):
-        """
-        Organize the data into a standard form with a set of tuples.
-
-        Args:
-        - dataset_path: Path to the input dataset CSV file.
-
-        Returns:
-        - List of tuples representing the standardized dataset.
-        """
-        dataset = self.read_csv_dataset(dataset_path)
-        if dataset:
-            self.standardized_tuples = self.extract_tuples(dataset)
-        return self.standardized_tuples
+    Returns:
+    - formatted_data (list of tuples): Standard set of tuples representing the dataset.
+    """
+    formatted_data = []
+    
+    if file_format.lower() == 'csv':
+        df = pd.read_csv(file_path, **kwargs)
+    elif file_format.lower() == 'excel':
+        df = pd.read_excel(file_path, **kwargs)
+    elif file_format.lower() == 'json':
+        df = pd.read_json(file_path, **kwargs)
+    else:
+        raise ValueError("Unsupported file format. Please provide 'csv', 'excel', or 'json'.")
+    
+    # Organize the data into tuples
+    for index, row in df.iterrows():
+        data_tuple = tuple(row)
+        formatted_data.append(data_tuple)
+    
+    return formatted_data
 
 # Example usage:
-formatter = InputDatasetFormatter()
-dataset_path = 'sample.csv'
-standardized_dataset = formatter.format_dataset(dataset_path)
-print(standardized_dataset)
+file_path = 'sample.csv'  # Replace with the path to your dataset file
+formatted_data = format_input_dataset(file_path, file_format='csv')
+print(formatted_data[:5])  # Print the first few tuples for verification
