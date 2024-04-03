@@ -1,36 +1,43 @@
 import pandas as pd
+input_data = pd.read_csv('uncleaned_dataset.csv')
+def row_to_tuple(row):
+    tuple_data = (
+        row['General_Health'],
+        row['Checkup'],
+        row['Exercise'],
+        row['Heart_Disease'],
+        row['Skin_Cancer'],
+        row['Other_Cancer'],
+        row['Depression'],
+        row['Diabetes'],
+        row['Arthritis'],
+        row['Sex'],
+        row['Age_Category'],
+        row['Height_(cm)'],
+        row['Weight_(kg)'],
+        row['BMI'],
+        row['Smoking_History'],
+        row['Alcohol_Consumption'],
+        row['Fruit_Consumption'],
+        row['Green_Vegetables_Consumption'],
+        row['FriedPotato_Consumption']
+    )
+    return tuple_data
+tuples_list = input_data.apply(row_to_tuple, axis=1).tolist()
+#abnormal groups computation
+def is_valid_height(height):
+    return 63 <= height <= 248
 
-def format_input_dataset(file_path, file_format='csv', **kwargs):
-    """
-    Reads the input dataset and formats it into a standard set of tuples.
+def is_valid_alcohol_consumption(alcohol_consumption):
+    return 0 <= alcohol_consumption <= 30
 
-    Args:
-    - file_path (str): Path to the input dataset file.
-    - file_format (str): Format of the input dataset file (csv, excel, json).
-    - **kwargs: Additional keyword arguments to pass to the file reader.
+abnormal_groups = []
 
-    Returns:
-    - formatted_data (list of tuples): Standard set of tuples representing the dataset.
-    """
-    formatted_data = []
-    
-    if file_format.lower() == 'csv':
-        df = pd.read_csv(file_path, **kwargs)
-    elif file_format.lower() == 'excel':
-        df = pd.read_excel(file_path, **kwargs)
-    elif file_format.lower() == 'json':
-        df = pd.read_json(file_path, **kwargs)
-    else:
-        raise ValueError("Unsupported file format. Please provide 'csv', 'excel', or 'json'.")
-    
-    # Organize the data into tuples
-    for index, row in df.iterrows():
-        data_tuple = tuple(row)
-        formatted_data.append(data_tuple)
-    
-    return formatted_data
+for tuple_data in tuples_list:
+    if not is_valid_height(tuple_data[11]):  
+        abnormal_groups.append(tuple_data)
+    if not is_valid_alcohol_consumption(tuple_data[15]): 
+        abnormal_groups.append(tuple_data)
 
-# Example usage:
-file_path = 'sample.csv'  # Replace with the path to your dataset file
-formatted_data = format_input_dataset(file_path, file_format='csv')
-print(formatted_data[:5])  # Print the first few tuples for verification
+for group in abnormal_groups:
+    print(group)
