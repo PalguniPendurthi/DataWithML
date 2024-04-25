@@ -38,6 +38,6 @@ for tuple_data in tuples_list:
         abnormal_groups.append(tuple_data)
     if not is_valid_alcohol_consumption(tuple_data[15]): 
         abnormal_groups.append(tuple_data)
-
+#add more rules
 for group in abnormal_groups:
     print(group)
