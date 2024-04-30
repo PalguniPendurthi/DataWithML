@@ -1,8 +1,32 @@
 import pandas as pd
 from collections import defaultdict
 
-# Load the dirty dataset
-dirty_data = pd.read_csv('dirty_dataset.csv')
+data = pd.read_csv('uncleaned_dataset.csv')
+
+# Create a DataFrame
+df = pd.DataFrame(data)
+
+# Filter valid records based on height and alcohol consumption
+valid_height = df['Height_(cm)'].between(63, 248)
+valid_alcohol = df['Alcohol_Consumption'].between(0, 30)
+
+# Filter records with no missing values
+no_missing_values = df.notnull().all(axis=1)
+
+# Create a mask for rows that should be considered normal
+valid_records = valid_height & valid_alcohol & no_missing_values
+
+# Separate the data into normal and abnormal
+cleaned_data = df[valid_records]
+abnormal_data = df[~valid_records]
+
+# Save to CSV
+cleaned_data.to_csv('clean.csv', index=False)
+abnormal_data.to_csv('abnormal.csv', index=False)
+
+# Load the clean and dirty dataset
+clean_data = pd.read_csv('clean.csv')
+abnormal_data = pd.read_csv('abnormal.csv')
 
 # Define data quality rules
 rules = [
@@ -31,8 +55,8 @@ rules = [
 ]
 
 # Transform the dataset into a standard form with a set of tuples
-tuples = []
-for _, row in dirty_data.iterrows():
+clean_tuples = []
+for _, row in clean_data.iterrows():
     tuple_data = {
         'Depression': row['Depression'],
         'BMI': row['BMI'],
@@ -44,7 +68,22 @@ for _, row in dirty_data.iterrows():
         'Weight_kg': row['Weight_(kg)'],
         'FriedPotato_Consumption': row['FriedPotato_Consumption']
     }
-    tuples.append(tuple_data)
+    clean_tuples.append(tuple_data)
+
+abnormal_tuples = []
+for _, row in abnormal_data.iterrows():
+    tuple_data = {
+        'Depression': row['Depression'],
+        'BMI': row['BMI'],
+        'Alcohol_Consumption': row['Alcohol_Consumption'],
+        'Sex': row['Sex'],
+        'Age_Category': row['Age_Category'],
+        'Checkup': row['Checkup'],
+        'Height_cm': row['Height_(cm)'],
+        'Weight_kg': row['Weight_(kg)'],
+        'FriedPotato_Consumption': row['FriedPotato_Consumption']
+    }
+    abnormal_tuples.append(tuple_data)
 
 # Transform data quality rules into MLN rules
 mln_rules = []
@@ -87,8 +126,15 @@ def construct_mln_index(tuples, mln_rules):
     return mln_index
 
 # Construct the MLN index
-mln_index = construct_mln_index(tuples, mln_rules)
+mln_index = construct_mln_index(clean_tuples, mln_rules)
 
+print("\nMLN Index:")
+for block_idx, block in mln_index.items():
+    print(f"Block {block_idx} (Rule: {mln_rules[block_idx]})")
+    for group_idx, group in enumerate(block.values()):
+        gammas = ", ".join([f"γ: {gamma}" for gamma in group])
+        print(f"  Group {group_idx} with gammas: [{gammas}]")
+            
 # Print the MLN index
 def process_abnormal_groups(mln_index):
     for block_idx, block in mln_index.items():
@@ -207,7 +253,7 @@ def derive_unified_data(cleaned_versions, tuples):
 
     return unified_data
 # Derive the unified clean data
-unified_data = derive_unified_data(cleaned_versions, tuples)
+unified_data = derive_unified_data(cleaned_versions, clean_tuples)
 
 # Print the unified clean data
 print("\nUnified Clean Data:")
